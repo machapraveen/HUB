@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,22 +15,27 @@ import { ProgressRing } from "@/components/ProgressRing";
 import { CommunicationList } from "@/components/communications/CommunicationList";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { DocumentCard } from "@/components/documents/DocumentCard";
-import { communications, tasks, documents, Communication, Document, Task } from "@/data/mockData";
-import { Hackathon, EventType, fetchEventById, updateEvent } from "@/services/eventService";
+import { fetchEventById, updateEvent, EventType } from "@/services/eventService";
+import { fetchCommunications, createCommunication, Communication } from "@/services/communicationService";
+import { fetchTasks, createTask, updateTask, deleteTask, Task } from "@/services/taskService";
+import { fetchDocuments, createDocument, deleteDocument } from "@/services/documentService";
 import { ChevronLeft, Plus, Upload } from "lucide-react";
+import { useSpace } from "@/contexts/SpaceContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const HackathonDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { userSpace } = useSpace();
+  const queryClient = useQueryClient();
   const [selectedCommunication, setSelectedCommunication] = useState<Communication | null>(null);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [showAddCommunicationDialog, setShowAddCommunicationDialog] = useState(false);
   const [showAddDocumentDialog, setShowAddDocumentDialog] = useState(false);
   const [showEditHackathonDialog, setShowEditHackathonDialog] = useState(false);
-  const [tasksList, setTasksList] = useState(tasks);
-  const [communicationsList, setCommunicationsList] = useState(communications);
-  const [documentsList, setDocumentsList] = useState(documents);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   // Fetch the hackathon data
   const { data: hackathon, isLoading, error } = useQuery({
@@ -39,11 +43,78 @@ const HackathonDetail = () => {
     queryFn: () => fetchEventById(id as string),
     enabled: !!id
   });
-  
-  // Filter communications, tasks and documents for this hackathon
-  const hackathonCommunications = communicationsList.filter(c => c.hackathonId === id);
-  const hackathonTasks = tasksList.filter(t => t.hackathonId === id);
-  const hackathonDocuments = documentsList.filter(d => d.hackathonId === id);
+
+  // Fetch communications
+  const { data: communications = [] } = useQuery({
+    queryKey: ['communications', id],
+    queryFn: () => fetchCommunications(id as string),
+    enabled: !!id
+  });
+
+  // Fetch tasks
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks', id],
+    queryFn: () => fetchTasks(id as string),
+    enabled: !!id
+  });
+
+  // Fetch documents
+  const { data: documents = [] } = useQuery({
+    queryKey: ['documents', id],
+    queryFn: () => fetchDocuments(undefined, id as string),
+    enabled: !!id
+  });
+
+  // Mutations
+  const createTaskMutation = useMutation({
+    mutationFn: createTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', id] });
+      toast({
+        title: "Task added",
+        description: "Task has been added successfully.",
+      });
+      setShowAddTaskDialog(false);
+    }
+  });
+
+  const createCommunicationMutation = useMutation({
+    mutationFn: createCommunication,
+    onSuccess: (newCommunication) => {
+      queryClient.invalidateQueries({ queryKey: ['communications', id] });
+      setSelectedCommunication(newCommunication);
+      toast({
+        title: "Communication added",
+        description: "Communication has been added successfully.",
+      });
+      setShowAddCommunicationDialog(false);
+    }
+  });
+
+  const createDocumentMutation = useMutation({
+    mutationFn: createDocument,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents', id] });
+      toast({
+        title: "Document uploaded",
+        description: "Document has been uploaded successfully.",
+      });
+      setShowAddDocumentDialog(false);
+      setSelectedFile(null);
+    }
+  });
+
+  const updateEventMutation = useMutation({
+    mutationFn: ({ eventId, data }: { eventId: string, data: any }) => updateEvent(eventId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hackathon', id] });
+      toast({
+        title: "Event updated",
+        description: "Event has been updated successfully.",
+      });
+      setShowEditHackathonDialog(false);
+    }
+  });
 
   if (isLoading) {
     return <div className="flex justify-center p-8">Loading event details...</div>;
@@ -100,23 +171,13 @@ const HackathonDetail = () => {
     const form = e.currentTarget as HTMLFormElement;
     const formData = new FormData(form);
     
-    const newTask: Task = {
-      id: (tasksList.length + 1).toString(),
-      hackathonId: id || "",
+    createTaskMutation.mutate({
+      hackathon_id: id || "",
       title: formData.get("title") as string,
       description: formData.get("description") as string,
-      assignedTo: formData.get("assignedTo") as "Macha" | "Veerendra" | "Both",
-      status: "todo",
-      dueDate: formData.get("dueDate") as string | undefined,
+      assigned_to: formData.get("assignedTo") as "Macha" | "Veerendra" | "Both",
+      due_date: formData.get("dueDate") as string || undefined,
       priority: formData.get("priority") as "low" | "medium" | "high"
-    };
-    
-    setTasksList([...tasksList, newTask]);
-    setShowAddTaskDialog(false);
-    
-    toast({
-      title: "Task added",
-      description: `"${newTask.title}" has been added successfully.`,
     });
   };
 
@@ -125,49 +186,61 @@ const HackathonDetail = () => {
     const form = e.currentTarget as HTMLFormElement;
     const formData = new FormData(form);
     
-    const newCommunication: Communication = {
-      id: (communicationsList.length + 1).toString(),
-      hackathonId: id || "",
+    createCommunicationMutation.mutate({
+      hackathon_id: id || "",
       sender: formData.get("sender") as string,
       subject: formData.get("subject") as string,
       content: formData.get("content") as string,
-      date: new Date().toISOString(),
-      read: false,
       important: formData.get("important") === "true"
-    };
-    
-    setCommunicationsList([...communicationsList, newCommunication]);
-    setSelectedCommunication(newCommunication);
-    setShowAddCommunicationDialog(false);
-    
-    toast({
-      title: "Communication added",
-      description: `"${newCommunication.subject}" has been added successfully.`,
     });
   };
 
-  const handleAddDocument = (e: React.FormEvent) => {
+  const handleAddDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    const form = e.currentTarget as HTMLFormElement;
-    const formData = new FormData(form);
+    if (!selectedFile || !userSpace) return;
     
-    const newDocument: Document = {
-      id: (documentsList.length + 1).toString(),
-      hackathonId: id || "",
-      name: formData.get("name") as string,
-      type: formData.get("type") as "research" | "code" | "presentation" | "submission" | "other",
-      uploadedBy: formData.get("uploadedBy") as "Macha" | "Veerendra",
-      uploadDate: new Date().toISOString(),
-      url: "#" // In a real app this would be the document URL
-    };
+    setUploadingDocument(true);
     
-    setDocumentsList([...documentsList, newDocument]);
-    setShowAddDocumentDialog(false);
-    
-    toast({
-      title: "Document added",
-      description: `"${newDocument.name}" has been added successfully.`,
-    });
+    try {
+      const form = e.currentTarget as HTMLFormElement;
+      const formData = new FormData(form);
+      
+      // Upload file to Supabase Storage
+      const fileExt = selectedFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `hackathons/${id}/${fileName}`;
+      
+      const { error: uploadError, data } = await supabase.storage
+        .from('documents')
+        .upload(filePath, selectedFile);
+      
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+      
+      // Save document metadata to database
+      createDocumentMutation.mutate({
+        name: formData.get("name") as string,
+        type: formData.get("type") as "research" | "code" | "presentation" | "submission" | "other",
+        uploaded_by: formData.get("uploadedBy") as "Macha" | "Veerendra",
+        url: publicUrl,
+        hackathon_id: id
+      });
+    } catch (error) {
+      console.error("Error uploading document:", error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your document",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingDocument(false);
+    }
   };
   
   const handleEditHackathon = (e: React.FormEvent) => {
@@ -183,35 +256,34 @@ const HackathonDetail = () => {
       end_date: formData.get("endDate") as string,
       location: formData.get("location") as string || undefined,
       type: formData.get("type") as EventType || undefined,
-      // We need to convert progress to a number for the database
-      progress: parseInt(formData.get("progress") as string)
     };
     
-    // Update the hackathon in the database
-    updateEvent(id as string, updatedHackathonData)
-      .then(() => {
-        setShowEditHackathonDialog(false);
-        
-        toast({
-          title: "Event updated",
-          description: `"${updatedHackathonData.title}" has been updated successfully.`,
-        });
-        
-        // Refetch the hackathon data
-        window.location.reload();
-      })
-      .catch(error => {
-        toast({
-          title: "Error updating event",
-          description: "An error occurred while updating the event.",
-          variant: "destructive",
-        });
-        console.error("Error updating event:", error);
-      });
+    updateEventMutation.mutate({
+      eventId: id as string,
+      data: updatedHackathonData
+    });
   };
 
   const handleProgressUpdate = () => {
     setShowEditHackathonDialog(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleDeleteDocument = (documentId: string) => {
+    if (window.confirm("Are you sure you want to delete this document?")) {
+      deleteDocument(documentId).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['documents', id] });
+        toast({
+          title: "Document deleted",
+          description: "Document has been deleted successfully.",
+        });
+      });
+    }
   };
 
   return (
@@ -269,6 +341,12 @@ const HackathonDetail = () => {
                 </div>
               )}
             </div>
+            {hackathon.description && (
+              <div className="mt-4">
+                <h3 className="font-medium">Description</h3>
+                <p className="text-muted-foreground">{hackathon.description}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -288,9 +366,9 @@ const HackathonDetail = () => {
 
       <Tabs defaultValue="tasks" className="w-full">
         <TabsList className="grid grid-cols-3 mb-8">
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          <TabsTrigger value="communications">Communications</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
+          <TabsTrigger value="tasks">Tasks ({tasks.length})</TabsTrigger>
+          <TabsTrigger value="communications">Communications ({communications.length})</TabsTrigger>
+          <TabsTrigger value="documents">Documents ({documents.length})</TabsTrigger>
         </TabsList>
         
         <TabsContent value="tasks" className="space-y-4">
@@ -301,8 +379,8 @@ const HackathonDetail = () => {
             </Button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {hackathonTasks.length > 0 ? (
-              hackathonTasks.map((task) => (
+            {tasks.length > 0 ? (
+              tasks.map((task) => (
                 <TaskCard key={task.id} task={task} />
               ))
             ) : (
@@ -323,7 +401,7 @@ const HackathonDetail = () => {
           </div>
           <div className="grid gap-6 md:grid-cols-2">
             <CommunicationList 
-              communications={hackathonCommunications} 
+              communications={communications} 
               onSelectCommunication={setSelectedCommunication}
             />
             
@@ -360,9 +438,13 @@ const HackathonDetail = () => {
             </Button>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {hackathonDocuments.length > 0 ? (
-              hackathonDocuments.map((document) => (
-                <DocumentCard key={document.id} document={document} />
+            {documents.length > 0 ? (
+              documents.map((document) => (
+                <DocumentCard 
+                  key={document.id} 
+                  document={document} 
+                  onDelete={() => handleDeleteDocument(document.id)}
+                />
               ))
             ) : (
               <div className="col-span-full py-8 text-center">
@@ -430,7 +512,9 @@ const HackathonDetail = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Add Task</Button>
+              <Button type="submit" disabled={createTaskMutation.isPending}>
+                {createTaskMutation.isPending ? "Adding..." : "Add Task"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -474,7 +558,9 @@ const HackathonDetail = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Add Communication</Button>
+              <Button type="submit" disabled={createCommunicationMutation.isPending}>
+                {createCommunicationMutation.isPending ? "Adding..." : "Add Communication"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -490,7 +576,13 @@ const HackathonDetail = () => {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Document Name</Label>
-                <Input id="name" name="name" placeholder="Enter document name" required />
+                <Input 
+                  id="name" 
+                  name="name" 
+                  placeholder="Enter document name" 
+                  defaultValue={selectedFile?.name || ""}
+                  required 
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="type">Document Type</Label>
@@ -509,7 +601,7 @@ const HackathonDetail = () => {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="uploadedBy">Uploaded By</Label>
-                <Select name="uploadedBy" defaultValue="Macha">
+                <Select name="uploadedBy" defaultValue={userSpace || "Macha"}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select person" />
                   </SelectTrigger>
@@ -521,22 +613,50 @@ const HackathonDetail = () => {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="documentFile">Document File</Label>
-                <div className="border-2 border-dashed rounded-md p-6 cursor-pointer hover:border-primary/50 transition-colors">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <Upload className="h-8 w-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Drag and drop or click to upload</p>
-                  </div>
+                <div className="border-2 border-dashed rounded-md p-6">
+                  {selectedFile ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">{selectedFile.name}</span>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setSelectedFile(null)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Click to select file</p>
+                    </div>
+                  )}
                   <input 
                     type="file" 
                     id="documentFile" 
+                    onChange={handleFileChange}
                     className="hidden"
-                    // In a real app, this would handle file upload
+                    required={!selectedFile}
                   />
+                  <Button 
+                    type="button"
+                    variant="secondary"
+                    className="mt-2 w-full"
+                    onClick={() => document.getElementById("documentFile")?.click()}
+                  >
+                    {selectedFile ? "Change File" : "Select File"}
+                  </Button>
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Upload Document</Button>
+              <Button 
+                type="submit" 
+                disabled={uploadingDocument || !selectedFile}
+              >
+                {uploadingDocument ? "Uploading..." : "Upload Document"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -607,27 +727,11 @@ const HackathonDetail = () => {
                   placeholder="Enter location or 'Online'" 
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="progress">Progress</Label>
-                <Input 
-                  id="progress" 
-                  name="progress" 
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  defaultValue={hackathon.progress.toString()}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0%</span>
-                  <span>{hackathon.progress}%</span>
-                  <span>100%</span>
-                </div>
-              </div>
             </div>
             <DialogFooter>
-              <Button type="submit">Update Event</Button>
+              <Button type="submit" disabled={updateEventMutation.isPending}>
+                {updateEventMutation.isPending ? "Updating..." : "Update Event"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
