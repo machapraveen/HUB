@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,10 +34,10 @@ const Dashboard = () => {
     queryFn: () => fetchEvents(userSpace)
   });
   
-  // Fetch projects
+  // Fetch only shared projects for dashboard
   const { data: projects = [], isLoading: projectsLoading } = useQuery({
-    queryKey: ['projects', 'dashboard', userSpace],
-    queryFn: () => fetchProjects(userSpace)
+    queryKey: ['projects', 'dashboard', 'Both'],
+    queryFn: () => fetchProjects("Both")
   });
   
   // Fetch quick tasks
@@ -109,7 +108,7 @@ const Dashboard = () => {
   
   const activeHackathons = events.filter(h => h.status === "active");
   const upcomingHackathons = events.filter(h => h.status === "upcoming");
-  const sharedProjects = projects.filter(p => p.userId === "Both").slice(0, 3); // Only show shared projects
+  const sharedProjects = projects.slice(0, 3); // Only show first 3 shared projects
   
   const completedTasksCount = tasks.filter(task => task.completed).length;
   const pendingTasksCount = tasks.filter(task => !task.completed).length;
@@ -160,9 +159,9 @@ const Dashboard = () => {
     }
   };
 
-  // Navigate to the shared projects tab
+  // Navigate to the shared projects only
   const navigateToSharedProjects = () => {
-    navigate('/projects?tab=both');
+    navigate('/projects?view=shared');
   };
 
   const isLoading = eventsLoading || projectsLoading || tasksLoading || linksLoading;
