@@ -1,73 +1,115 @@
-# Welcome to your Lovable project
+## 🚀 HUB - Team Collaboration for Hackathons
 
-## Project info
+HUB is a powerful Progressive Web Application (PWA) designed to simplify and streamline team collaboration during hackathons. It helps participants manage communication, tasks, and documents with ease.
 
-**URL**: https://lovable.dev/projects/38c9677c-e303-4322-a73d-6a292efc074a
+---
 
-## How can I edit this code?
+### 🧠 Key Features
 
-There are several ways of editing your application.
+* **Team Management**: Collaborate with your team in real-time.
+* **Task Tracking**: Assign, track, and update task progress.
+* **Document Sharing**: Easily share files and resources with your team.
+* **Mobile-First PWA**: Install and use on any device, even offline.
+* **Modern UI**: Sleek, accessible, and responsive interface.
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/38c9677c-e303-4322-a73d-6a292efc074a) and start prompting.
+### 🌐 Live Preview
 
-Changes made via Lovable will be committed automatically to this repo.
+(Provide your live demo link here, if hosted)
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 📁 Project Structure
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```
+├── public/
+│   ├── manifest.json         # PWA configuration
+│   └── favicon.ico           # Favicon
+├── src/
+│   ├── main.tsx              # React app entry
+│   └── ...                   # Other React components and pages
+├── index.html                # Main HTML file
+├── vite.config.ts            # Vite configuration
+├── package.json              # Project metadata and dependencies
+└── README.md                 # You're here!
+```
 
-Follow these steps:
+---
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 🛠️ Technologies Used
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+* **React 18**
+* **TypeScript**
+* **Vite**
+* **Tailwind CSS**
+* **Radix UI**
+* **ShadCN UI**
+* **Zod**, **React Hook Form**
+* **React Router**
+* **Supabase** for backend services (if applicable)
+* **PWA support** via Web Manifest & Service Worker
 
-# Step 3: Install the necessary dependencies.
-npm i
+---
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### ⚙️ Getting Started
+
+#### 1. Clone the Repository
+
+```bash
+git clone https://github.com/machapraveen/HUB
+cd hackbuddy
+```
+
+#### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+#### 3. Run the Development Server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Visit `http://localhost:8080` to view the app.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+---
 
-**Use GitHub Codespaces**
+### 📦 Build for Production
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm run build
+```
 
-## What technologies are used for this project?
+To preview the production build:
 
-This project is built with:
+```bash
+npm run preview
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+---
 
-## How can I deploy this project?
+### 🧾 Meta Tags Included
 
-Simply open [Lovable](https://lovable.dev/projects/38c9677c-e303-4322-a73d-6a292efc074a) and click on Share -> Publish.
+The `index.html` is already optimized with the following:
 
-## Can I connect a custom domain to my Lovable project?
+* **Open Graph Tags** for rich social sharing
+* **Twitter Card** support
+* **Theme color** for a branded browser experience
+* **Author metadata**
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### 🧑‍💻 Authors
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+* **Macha Praveen**
+* **Veerendra**
+
+---
+
+### 📃 License
+
+This project is licensed under the MIT License.
+
