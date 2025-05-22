@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Document } from "@/components/documents/DocumentCard";
@@ -11,8 +10,13 @@ type DocumentInsert = {
   hackathon_id?: string;
 };
 
-export const fetchDocuments = async (userSpace?: "Macha" | "Veerendra" | "Both") => {
+export const fetchDocuments = async (userSpace?: "Macha" | "Veerendra" | "Both", hackathonId?: string) => {
   let query = supabase.from("documents").select("*");
+  
+  // Filter by hackathon if specified
+  if (hackathonId) {
+    query = query.eq("hackathon_id", hackathonId);
+  }
   
   if (userSpace) {
     if (userSpace === "Both") {
