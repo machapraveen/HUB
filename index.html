@@ -2,23 +2,68 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HUB - Team Collaboration for Hackathons</title>
-    <meta name="description" content="Manage hackathon participation, communications, tasks and documents with your team" />
+    
+    <!-- SEO Meta Tags -->
+    <title>HackBuddy - Team Collaboration for Hackathons</title>
+    <meta name="description" content="Manage hackathon participation, communications, tasks and documents with your team. A powerful PWA for hackathon collaboration." />
     <meta name="author" content="Macha and Veerendra" />
+    <meta name="keywords" content="hackathon, collaboration, team, project management, PWA" />
 
-    <meta property="og:title" content="HUB - Team Collaboration for Hackathons" />
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="HackBuddy - Team Collaboration for Hackathons" />
     <meta property="og:description" content="Manage hackathon participation, communications, tasks and documents with your team" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://seveen-hub.netlify.app" />
+    <meta property="og:site_name" content="HackBuddy" />
     
+    <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="HackBuddy - Team Collaboration for Hackathons" />
+    <meta name="twitter:description" content="Manage hackathon participation, communications, tasks and documents with your team" />
 
+    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#6D28D9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="HackBuddy" />
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
+    
+    <!-- Manifest -->
     <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Preconnect to improve performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Security -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
