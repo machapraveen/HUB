@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils";
 
 const CreateHackathon = () => {
   const navigate = useNavigate();
-  const { userSpace } = useSpace();
   const queryClient = useQueryClient();
   
   const [title, setTitle] = useState("");
@@ -83,6 +82,7 @@ const CreateHackathon = () => {
       }
     }
     
+    // Always set user_space to "Both" for events - events are always shared
     createEventMutation.mutate({
       title,
       organizer,
@@ -93,7 +93,7 @@ const CreateHackathon = () => {
       start_date: startDate?.toISOString() || new Date().toISOString(),
       end_date: endDate?.toISOString() || new Date().toISOString(),
       status,
-      user_space: userSpace || "Both"
+      user_space: "Both" // Force events to always be shared
     });
   };
 
@@ -237,11 +237,14 @@ const CreateHackathon = () => {
             
             <div className="grid gap-3">
               <Label>Visible To</Label>
-              <div className="bg-muted p-2 rounded-md text-sm">
-                {userSpace || "Both"}
+              <div className="bg-muted p-3 rounded-md text-sm">
+                <div className="flex items-center justify-between">
+                  <span>Both (Shared Event)</span>
+                  <span className="text-xs text-muted-foreground">Events are always shared</span>
+                </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Event will be created for your current space.
+                All events are created as shared events visible to both team members.
               </p>
             </div>
           </CardContent>

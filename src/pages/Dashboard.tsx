@@ -28,7 +28,10 @@ const Dashboard = () => {
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   
-  // Fetch events
+  // For dashboard, always use "Both" for shared content
+  const dashboardUserSpace = "Both";
+  
+  // Fetch events - use current userSpace to show relevant events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['events', 'dashboard', userSpace],
     queryFn: () => fetchEvents(userSpace)
@@ -40,16 +43,16 @@ const Dashboard = () => {
     queryFn: () => fetchProjects("Both")
   });
   
-  // Fetch quick tasks
+  // Fetch quick tasks - always use "Both" for dashboard
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ['quickTasks', userSpace],
-    queryFn: () => fetchQuickTasks(userSpace)
+    queryKey: ['quickTasks', dashboardUserSpace],
+    queryFn: () => fetchQuickTasks(dashboardUserSpace)
   });
   
-  // Fetch quick access links
+  // Fetch quick access links - always use "Both" for dashboard
   const { data: accessLinks = [], isLoading: linksLoading } = useQuery({
-    queryKey: ['quickAccess', userSpace],
-    queryFn: () => fetchQuickAccess(userSpace)
+    queryKey: ['quickAccess', dashboardUserSpace],
+    queryFn: () => fetchQuickAccess(dashboardUserSpace)
   });
   
   // Create task mutation
@@ -117,7 +120,7 @@ const Dashboard = () => {
     createTaskMutation.mutate({
       title: taskData.title,
       due_date: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null,
-      user_space: userSpace || "Both"
+      user_space: dashboardUserSpace // Always use "Both" for dashboard tasks
     });
   };
 
@@ -148,7 +151,7 @@ const Dashboard = () => {
       title: linkData.title,
       url: linkData.url,
       color: linkData.category || null,
-      user_space: userSpace || "Both"
+      user_space: dashboardUserSpace // Always use "Both" for dashboard links
     });
   };
 

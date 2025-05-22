@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,7 @@ export function CreateProjectDialog({ open, onOpenChange, onCreateProject }: Cre
       description: formData.get("description"),
       directoryPath: formData.get("directoryPath"),
       color: selectedColor,
-      userId: assignedTo,
+      userId: assignedTo, // Use the selected assignedTo value, not userSpace
       createdDate: new Date().toISOString(),
       progress: 0
     };
@@ -58,6 +57,8 @@ export function CreateProjectDialog({ open, onOpenChange, onCreateProject }: Cre
     });
     onOpenChange(false);
     form.reset();
+    setSelectedColor(projectColors[0].value);
+    setAssignedTo("Both");
   };
 
   return (

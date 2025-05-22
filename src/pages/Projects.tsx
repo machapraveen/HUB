@@ -52,12 +52,15 @@ const Projects = () => {
   const bothProjects = allProjects.filter(p => p.userId === "Both");
 
   const handleCreateProject = (projectData: any) => {
+    // Use the userId from projectData (which comes from the "Assigned to" selection)
+    // instead of userSpace (which is the current page location)
     createProjectMutation.mutate({
       name: projectData.name,
       description: projectData.description,
+      github_url: projectData.directoryPath,
       color: projectData.color,
       progress: 0,
-      user_space: userSpace || "Both"
+      user_space: projectData.userId // This is the key fix - use the selected assignment
     });
   };
 

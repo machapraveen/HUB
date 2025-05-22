@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,10 +13,20 @@ export type QuickAccessDialogProps = {
 };
 
 export function QuickAccessDialog({ open, onOpenChange, onCreateLink }: QuickAccessDialogProps) {
-  const { userSpace } = useSpace();
+  const { userSpace, userId } = useSpace();
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState("none");
+  
+  // Determine the correct space to show
+  const getDisplaySpace = () => {
+    // If we're in dashboard (no specific user), show "Both"
+    if (!userId || !userSpace || userSpace === "Both") {
+      return "Both";
+    }
+    // If we're in a specific user space, show that space
+    return userSpace;
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +42,7 @@ export function QuickAccessDialog({ open, onOpenChange, onCreateLink }: QuickAcc
       title,
       url: formattedUrl,
       category: category === "none" ? undefined : category,
-      userSpace: userSpace || "Both"
+      userSpace: getDisplaySpace()
     };
     
     // Pass data to parent component
@@ -92,10 +101,13 @@ export function QuickAccessDialog({ open, onOpenChange, onCreateLink }: QuickAcc
             <div className="grid gap-2">
               <Label htmlFor="userSpace">Visible To</Label>
               <div className="bg-muted p-2 rounded-md text-sm">
-                {userSpace || "Both"}
+                {getDisplaySpace()}
               </div>
               <p className="text-xs text-muted-foreground">
-                Links are created for your current space.
+                {getDisplaySpace() === "Both" 
+                  ? "This link will be shared and visible to both team members."
+                  : `This link will be visible in ${getDisplaySpace()}'s space.`
+                }
               </p>
             </div>
           </div>

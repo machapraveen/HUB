@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,9 +12,19 @@ export type QuickTaskDialogProps = {
 };
 
 export function QuickTaskDialog({ open, onOpenChange, onCreateTask }: QuickTaskDialogProps) {
-  const { userSpace } = useSpace();
+  const { userSpace, userId } = useSpace();
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  
+  // Determine the correct space to show
+  const getDisplaySpace = () => {
+    // If we're in dashboard (no specific user), show "Both"
+    if (!userId || !userSpace || userSpace === "Both") {
+      return "Both";
+    }
+    // If we're in a specific user space, show that space
+    return userSpace;
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +33,7 @@ export function QuickTaskDialog({ open, onOpenChange, onCreateTask }: QuickTaskD
     const taskData = {
       title,
       dueDate: dueDate || undefined,
-      userSpace: userSpace || "Both"
+      userSpace: getDisplaySpace()
     };
     
     // Pass data to parent component
@@ -66,10 +75,13 @@ export function QuickTaskDialog({ open, onOpenChange, onCreateTask }: QuickTaskD
             <div className="grid gap-2">
               <Label htmlFor="userSpace">Visible To</Label>
               <div className="bg-muted p-2 rounded-md text-sm">
-                {userSpace || "Both"}
+                {getDisplaySpace()}
               </div>
               <p className="text-xs text-muted-foreground">
-                Tasks are created for your current space.
+                {getDisplaySpace() === "Both" 
+                  ? "This task will be shared and visible to both team members."
+                  : `This task will be visible in ${getDisplaySpace()}'s space.`
+                }
               </p>
             </div>
           </div>
