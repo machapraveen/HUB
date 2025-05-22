@@ -28,9 +28,6 @@ const Dashboard = () => {
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   
-  // For dashboard, always use "Both" for shared content
-  const dashboardUserSpace = "Both";
-  
   // Fetch events - use current userSpace to show relevant events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['events', 'dashboard', userSpace],
@@ -43,16 +40,16 @@ const Dashboard = () => {
     queryFn: () => fetchProjects("Both")
   });
   
-  // Fetch quick tasks - always use "Both" for dashboard
+  // Fetch quick tasks - use userSpace if available, otherwise "Both"
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ['quickTasks', dashboardUserSpace],
-    queryFn: () => fetchQuickTasks(dashboardUserSpace)
+    queryKey: ['quickTasks', userSpace || "Both"],
+    queryFn: () => fetchQuickTasks(userSpace || "Both")
   });
   
-  // Fetch quick access links - always use "Both" for dashboard
+  // Fetch quick access links - use userSpace if available, otherwise "Both"
   const { data: accessLinks = [], isLoading: linksLoading } = useQuery({
-    queryKey: ['quickAccess', dashboardUserSpace],
-    queryFn: () => fetchQuickAccess(dashboardUserSpace)
+    queryKey: ['quickAccess', userSpace || "Both"],
+    queryFn: () => fetchQuickAccess(userSpace || "Both")
   });
   
   // Create task mutation
@@ -64,6 +61,7 @@ const Dashboard = () => {
         title: "Task added",
         description: "Your new task has been created successfully."
       });
+      setShowTaskDialog(false);
     }
   });
   
@@ -95,6 +93,7 @@ const Dashboard = () => {
         title: "Link added",
         description: "Your new quick access link has been created successfully."
       });
+      setShowLinkDialog(false);
     }
   });
   
@@ -120,7 +119,7 @@ const Dashboard = () => {
     createTaskMutation.mutate({
       title: taskData.title,
       due_date: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null,
-      user_space: dashboardUserSpace // Always use "Both" for dashboard tasks
+      user_space: taskData.userSpace // Use the selected space from dialog
     });
   };
 
@@ -151,7 +150,7 @@ const Dashboard = () => {
       title: linkData.title,
       url: linkData.url,
       color: linkData.category || null,
-      user_space: dashboardUserSpace // Always use "Both" for dashboard links
+      user_space: linkData.userSpace // Use the selected space from dialog
     });
   };
 

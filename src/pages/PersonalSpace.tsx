@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSpace } from "@/contexts/SpaceContext";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +29,7 @@ const PersonalSpace = () => {
   const { userId, userSpace, securityVerified } = useSpace();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [documentUploadOpen, setDocumentUploadOpen] = useState(false);
@@ -147,7 +147,7 @@ const PersonalSpace = () => {
     createTaskMutation.mutate({
       title: taskData.title,
       due_date: taskData.dueDate,
-      user_space: userSpace || "Both"
+      user_space: taskData.userSpace // Use the selected space from dialog
     });
   };
 
@@ -156,12 +156,16 @@ const PersonalSpace = () => {
       title: linkData.title,
       url: linkData.url,
       color: linkData.category,
-      user_space: userSpace || "Both"
+      user_space: linkData.userSpace // Use the selected space from dialog
     });
   };
 
   const handleDocumentUploadComplete = () => {
     queryClient.invalidateQueries({ queryKey: ['documents'] });
+  };
+
+  const handleClickProject = (projectId: string) => {
+    navigate(`/projects/${projectId}`);
   };
 
   // Show security verification if not verified
@@ -259,7 +263,11 @@ const PersonalSpace = () => {
               <div className="col-span-full text-center">Loading projects...</div>
             ) : projects.length > 0 ? (
               projects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
+                <ProjectCard 
+                  key={project.id} 
+                  project={project} 
+                  onClick={() => handleClickProject(project.id)}
+                />
               ))
             ) : (
               <div className="col-span-full text-center p-8">

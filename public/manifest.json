@@ -1,22 +1,55 @@
-
 {
-  "name": "HackBuddy",
+  "name": "HackBuddy - Team Collaboration Hub",
   "short_name": "HackBuddy",
-  "description": "Team collaboration for hackathons",
+  "description": "Team collaboration for hackathons and projects",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#6D28D9",
+  "categories": ["productivity", "utilities", "collaboration"],
+  "lang": "en-US",
+  "scope": "/",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your main dashboard",
+      "url": "/",
+      "icons": [{"src": "/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Events",
+      "short_name": "Events", 
+      "description": "View hackathons and events",
+      "url": "/hackathons",
+      "icons": [{"src": "/icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Projects",
+      "short_name": "Projects",
+      "description": "View your projects",
+      "url": "/projects",
+      "icons": [{"src": "/icon-192.png", "sizes": "192x192"}]
     }
   ]
 }

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 
@@ -19,8 +18,10 @@ export const fetchQuickAccess = async (userSpace?: "Macha" | "Veerendra" | "Both
   
   if (userSpace) {
     if (userSpace === "Both") {
+      // For dashboard or shared view, get only "Both" links
       query = query.eq("user_space", "Both");
     } else {
+      // For specific user space, get user-specific links AND shared links
       query = query.or(`user_space.eq.${userSpace},user_space.eq.Both`);
     }
   }

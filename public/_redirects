@@ -1,0 +1,13 @@
+# Netlify redirects file
+# Handle client-side routing for SPA
+/*    /index.html   200
+
+# API redirects if needed
+/api/*  /.netlify/functions/:splat  200
+
+# Security headers and caching
+/manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
