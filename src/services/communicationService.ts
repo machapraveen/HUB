@@ -2,7 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Communication = {
   id: string;
-  hackathonId: string;
+  hackathonId?: string;
+  projectId?: string;
   sender: string;
   subject: string;
   content: string;
@@ -12,7 +13,8 @@ export type Communication = {
 };
 
 type CommunicationInsert = {
-  hackathon_id: string;
+  hackathon_id?: string;
+  project_id?: string;
   sender: string;
   subject: string;
   content: string;
@@ -20,12 +22,18 @@ type CommunicationInsert = {
   read?: boolean;
 };
 
-export const fetchCommunications = async (hackathonId: string) => {
-  const { data, error } = await supabase
-    .from("communications")
-    .select("*")
-    .eq("hackathon_id", hackathonId)
-    .order("created_at", { ascending: false });
+export const fetchCommunications = async (hackathonId?: string, projectId?: string) => {
+  let query = supabase.from("communications").select("*");
+  
+  if (hackathonId) {
+    query = query.eq("hackathon_id", hackathonId);
+  } else if (projectId) {
+    query = query.eq("project_id", projectId);
+  }
+  
+  query = query.order("created_at", { ascending: false });
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching communications:", error);
@@ -81,7 +89,8 @@ export const deleteCommunication = async (id: string) => {
 const convertCommunicationRowToCommunication = (row: any): Communication => {
   return {
     id: row.id,
-    hackathonId: row.hackathon_id,
+    hackathonId: row.hackathon_id || undefined,
+    projectId: row.project_id || undefined,
     sender: row.sender,
     subject: row.subject,
     content: row.content,

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSpace } from "@/contexts/SpaceContext";
 
 export type QuickTaskDialogProps = {
@@ -15,16 +16,16 @@ export function QuickTaskDialog({ open, onOpenChange, onCreateTask }: QuickTaskD
   const { userSpace, userId } = useSpace();
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const [selectedSpace, setSelectedSpace] = useState<"Macha" | "Veerendra" | "Both">("Both");
   
-  // Determine the correct space to show
-  const getDisplaySpace = () => {
-    // If we're in dashboard (no specific user), show "Both"
+  // Set default space based on current context
+  useState(() => {
     if (!userId || !userSpace || userSpace === "Both") {
-      return "Both";
+      setSelectedSpace("Both");
+    } else {
+      setSelectedSpace(userSpace);
     }
-    // If we're in a specific user space, show that space
-    return userSpace;
-  };
+  });
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +34,7 @@ export function QuickTaskDialog({ open, onOpenChange, onCreateTask }: QuickTaskD
     const taskData = {
       title,
       dueDate: dueDate || undefined,
-      userSpace: getDisplaySpace()
+      userSpace: selectedSpace
     };
     
     // Pass data to parent component
@@ -42,6 +43,7 @@ export function QuickTaskDialog({ open, onOpenChange, onCreateTask }: QuickTaskD
     // Reset form and close dialog
     setTitle("");
     setDueDate("");
+    setSelectedSpace("Both");
     onOpenChange(false);
   };
   
@@ -73,14 +75,25 @@ export function QuickTaskDialog({ open, onOpenChange, onCreateTask }: QuickTaskD
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="userSpace">Visible To</Label>
-              <div className="bg-muted p-2 rounded-md text-sm">
-                {getDisplaySpace()}
-              </div>
+              <Label>Visible To</Label>
+              <RadioGroup value={selectedSpace} onValueChange={(val) => setSelectedSpace(val as "Macha" | "Veerendra" | "Both")} className="flex space-x-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Macha" id="task-macha" />
+                  <Label htmlFor="task-macha">Macha</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Veerendra" id="task-veerendra" />
+                  <Label htmlFor="task-veerendra">Veerendra</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Both" id="task-both" />
+                  <Label htmlFor="task-both">Both</Label>
+                </div>
+              </RadioGroup>
               <p className="text-xs text-muted-foreground">
-                {getDisplaySpace() === "Both" 
+                {selectedSpace === "Both" 
                   ? "This task will be shared and visible to both team members."
-                  : `This task will be visible in ${getDisplaySpace()}'s space.`
+                  : `This task will be visible in ${selectedSpace}'s space.`
                 }
               </p>
             </div>

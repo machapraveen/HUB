@@ -2,7 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Task = {
   id: string;
-  hackathonId: string;
+  hackathonId?: string;
+  projectId?: string;
   title: string;
   description: string;
   assignedTo: "Macha" | "Veerendra" | "Both";
@@ -13,7 +14,8 @@ export type Task = {
 };
 
 type TaskInsert = {
-  hackathon_id: string;
+  hackathon_id?: string;
+  project_id?: string;
   title: string;
   description: string;
   assigned_to: "Macha" | "Veerendra" | "Both";
@@ -22,12 +24,18 @@ type TaskInsert = {
   priority: "low" | "medium" | "high";
 };
 
-export const fetchTasks = async (hackathonId: string) => {
-  const { data, error } = await supabase
-    .from("tasks")
-    .select("*")
-    .eq("hackathon_id", hackathonId)
-    .order("created_at", { ascending: false });
+export const fetchTasks = async (hackathonId?: string, projectId?: string) => {
+  let query = supabase.from("tasks").select("*");
+  
+  if (hackathonId) {
+    query = query.eq("hackathon_id", hackathonId);
+  } else if (projectId) {
+    query = query.eq("project_id", projectId);
+  }
+  
+  query = query.order("created_at", { ascending: false });
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching tasks:", error);
@@ -83,7 +91,8 @@ export const deleteTask = async (id: string) => {
 const convertTaskRowToTask = (row: any): Task => {
   return {
     id: row.id,
-    hackathonId: row.hackathon_id,
+    hackathonId: row.hackathon_id || undefined,
+    projectId: row.project_id || undefined,
     title: row.title,
     description: row.description,
     assignedTo: row.assigned_to,

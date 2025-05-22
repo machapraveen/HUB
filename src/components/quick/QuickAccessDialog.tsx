@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSpace } from "@/contexts/SpaceContext";
 
 export type QuickAccessDialogProps = {
@@ -17,16 +18,16 @@ export function QuickAccessDialog({ open, onOpenChange, onCreateLink }: QuickAcc
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState("none");
+  const [selectedSpace, setSelectedSpace] = useState<"Macha" | "Veerendra" | "Both">("Both");
   
-  // Determine the correct space to show
-  const getDisplaySpace = () => {
-    // If we're in dashboard (no specific user), show "Both"
+  // Set default space based on current context
+  useState(() => {
     if (!userId || !userSpace || userSpace === "Both") {
-      return "Both";
+      setSelectedSpace("Both");
+    } else {
+      setSelectedSpace(userSpace);
     }
-    // If we're in a specific user space, show that space
-    return userSpace;
-  };
+  });
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +43,7 @@ export function QuickAccessDialog({ open, onOpenChange, onCreateLink }: QuickAcc
       title,
       url: formattedUrl,
       category: category === "none" ? undefined : category,
-      userSpace: getDisplaySpace()
+      userSpace: selectedSpace
     };
     
     // Pass data to parent component
@@ -52,6 +53,7 @@ export function QuickAccessDialog({ open, onOpenChange, onCreateLink }: QuickAcc
     setTitle("");
     setUrl("");
     setCategory("none");
+    setSelectedSpace("Both");
     onOpenChange(false);
   };
   
@@ -99,14 +101,25 @@ export function QuickAccessDialog({ open, onOpenChange, onCreateLink }: QuickAcc
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="userSpace">Visible To</Label>
-              <div className="bg-muted p-2 rounded-md text-sm">
-                {getDisplaySpace()}
-              </div>
+              <Label>Visible To</Label>
+              <RadioGroup value={selectedSpace} onValueChange={(val) => setSelectedSpace(val as "Macha" | "Veerendra" | "Both")} className="flex space-x-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Macha" id="link-macha" />
+                  <Label htmlFor="link-macha">Macha</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Veerendra" id="link-veerendra" />
+                  <Label htmlFor="link-veerendra">Veerendra</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="Both" id="link-both" />
+                  <Label htmlFor="link-both">Both</Label>
+                </div>
+              </RadioGroup>
               <p className="text-xs text-muted-foreground">
-                {getDisplaySpace() === "Both" 
+                {selectedSpace === "Both" 
                   ? "This link will be shared and visible to both team members."
-                  : `This link will be visible in ${getDisplaySpace()}'s space.`
+                  : `This link will be visible in ${selectedSpace}'s space.`
                 }
               </p>
             </div>

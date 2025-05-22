@@ -8,14 +8,17 @@ type DocumentInsert = {
   uploaded_by: "Macha" | "Veerendra";
   url: string;
   hackathon_id?: string;
+  project_id?: string;
 };
 
-export const fetchDocuments = async (userSpace?: "Macha" | "Veerendra" | "Both", hackathonId?: string) => {
+export const fetchDocuments = async (userSpace?: "Macha" | "Veerendra" | "Both", hackathonId?: string, projectId?: string) => {
   let query = supabase.from("documents").select("*");
   
-  // Filter by hackathon if specified
+  // Filter by hackathon or project if specified
   if (hackathonId) {
     query = query.eq("hackathon_id", hackathonId);
+  } else if (projectId) {
+    query = query.eq("project_id", projectId);
   }
   
   if (userSpace) {
