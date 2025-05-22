@@ -1,6 +1,6 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { CreateProjectDialog } from "@/components/projects/CreateProjectDialog";
@@ -16,7 +16,17 @@ const Projects = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { userSpace } = useSpace();
+  const [searchParams] = useSearchParams();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+  
+  // Check if we're coming from dashboard with shared view
+  useEffect(() => {
+    const view = searchParams.get('view');
+    if (view === 'shared') {
+      setActiveTab('both');
+    }
+  }, [searchParams]);
   
   // Fetch all projects data
   const { data: allProjects = [], isLoading } = useQuery({
@@ -59,6 +69,52 @@ const Projects = () => {
     return <div className="flex justify-center p-8">Loading projects...</div>;
   }
 
+  // Check if we're in shared view mode (coming from dashboard)
+  const isSharedView = searchParams.get('view') === 'shared';
+
+  if (isSharedView) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Shared Projects</h1>
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> New Project
+          </Button>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {bothProjects.length > 0 ? (
+            bothProjects.map((project) => (
+              <ProjectCard 
+                key={project.id} 
+                project={project} 
+                onClick={() => handleClickProject(project.id)}
+              />
+            ))
+          ) : (
+            <div className="col-span-full py-8 text-center">
+              <p className="text-muted-foreground mb-4">No shared projects created yet</p>
+              <Button onClick={() => setCreateDialogOpen(true)}>Create your first shared project</Button>
+            </div>
+          )}
+        </div>
+
+        <CreateProjectDialog 
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onCreateProject={handleCreateProject}
+        />
+        
+        {/* Quick Access Button for Mobile */}
+        <div className="fixed bottom-6 right-6 md:hidden">
+          <Button size="lg" className="h-14 w-14 rounded-full shadow-lg" onClick={() => setCreateDialogOpen(true)}>
+            <Plus size={24} />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -68,7 +124,7 @@ const Projects = () => {
         </Button>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="macha">Macha</TabsTrigger>
