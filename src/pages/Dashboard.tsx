@@ -28,6 +28,9 @@ const Dashboard = () => {
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   
+  // Dashboard should ALWAYS show shared content only
+  const dashboardSpace = "Both";
+  
   // Fetch events - use current userSpace to show relevant events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
     queryKey: ['events', 'dashboard', userSpace],
@@ -40,16 +43,16 @@ const Dashboard = () => {
     queryFn: () => fetchProjects("Both")
   });
   
-  // Fetch quick tasks - use userSpace if available, otherwise "Both"
+  // Dashboard: ALWAYS fetch only "Both" (shared) tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ['quickTasks', userSpace || "Both"],
-    queryFn: () => fetchQuickTasks(userSpace || "Both")
+    queryKey: ['quickTasks', 'dashboard', dashboardSpace],
+    queryFn: () => fetchQuickTasks(dashboardSpace)
   });
   
-  // Fetch quick access links - use userSpace if available, otherwise "Both"
+  // Dashboard: ALWAYS fetch only "Both" (shared) access links
   const { data: accessLinks = [], isLoading: linksLoading } = useQuery({
-    queryKey: ['quickAccess', userSpace || "Both"],
-    queryFn: () => fetchQuickAccess(userSpace || "Both")
+    queryKey: ['quickAccess', 'dashboard', dashboardSpace],
+    queryFn: () => fetchQuickAccess(dashboardSpace)
   });
   
   // Create task mutation
